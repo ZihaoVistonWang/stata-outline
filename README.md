@@ -1,11 +1,14 @@
 # Stata Outline
 
-**Version:** 0.2.1
+**Version:** 0.2.2
+
 **Author:** Zihao Viston Wang
 
 [中文版本](README_CN.md)
 
 ---
+
+> ⚠️ Maintenance: This extension is no longer maintained. Please migrate to **Stata All in One** for ongoing updates.
 
 ## Features
 
@@ -123,6 +126,7 @@ Search for "Stata Outline" in VS Code settings and configure:
 
 | Version     | Changes                                                                                                                              | Release Date |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
+| 0.2.3       | Added migration prompt recommending Stata All in One                                                                                | 2026-01-27   |
 | 0.2.0-0.2.1 | macOS native section/run support (no external dependency); play button also in Outline view; new divider line commands and shortcuts | 2026-01-25   |
 | 0.1.9       | Outline now follows cursor, highlighting corresponding sections in real-time                                                         | 2026-01-24   |
 | 0.1.7-0.1.8 | Added toggle comments functionality with customizable comment styles                                                                 | 2026-01-22   |

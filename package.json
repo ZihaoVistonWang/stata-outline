@@ -1,15 +1,16 @@
 {
   "name": "stata-outline",
   "displayName": "Stata Outline",
-  "description": "Adds hierarchical Outline support for Stata .do files using comment headings like '**#', '**##', etc.",
-  "version": "0.2.2",
+  "description": "Adds hierarchical Outline support for Stata .do files using comment headings like '**#', '**##', etc. Suggested to migrate to `Stata All in One`; this extension is no longer maintained.",
+  "version": "0.2.3",
   "publisher": "ZihaoVistonWang",
   "icon": "icon.png",
   "engines": {
     "vscode": "^1.70.0"
   },
   "activationEvents": [
-    "onLanguage:stata"
+    "onLanguage:stata",
+    "onCommand:stata-outline.debugResetMigrationPrompt"
   ],
   "main": "./extension.js",
   "categories": [
@@ -128,6 +129,10 @@
       {
         "command": "stata-outline.insertSeparatorStar",
         "title": "Insert Star Separator"
+      },
+      {
+        "command": "stata-outline.debugResetMigrationPrompt",
+        "title": "Stata Outline: Debug Reset Migration Prompt"
       }
     ],
     "keybindings": [

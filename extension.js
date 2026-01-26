@@ -5,6 +5,162 @@ const showInfo = (msg, ...items) => vscode.window.showInformationMessage(`${EXT_
 const showWarn = (msg, ...items) => vscode.window.showWarningMessage(`${EXT_LABEL}: ${msg}`, ...items);
 const showError = (msg, ...items) => vscode.window.showErrorMessage(`${EXT_LABEL}: ${msg}`, ...items);
 
+const MIGRATION_MESSAGES = {
+    en: {
+        prompt: 'Stata Outline is no longer maintained. Please install Stata All in One for future updates and support.',
+        install: 'Install',
+        learnMore: 'Learn more',
+        remindLater: 'Remind me in 7 days',
+        installSuccess: 'Stata All in One installed. Reload VS Code to use it.',
+        installFailed: 'Failed to install Stata All in One: '
+    },
+    zh: {
+        prompt: 'Stata Outline 已不再维护，建议安装 Stata All in One 以获得后续更新。',
+        install: '安装',
+        learnMore: '了解更多',
+        remindLater: '稍后提示',
+        installSuccess: '已安装 Stata All in One，请重载 VS Code 后使用。',
+        installFailed: '安装 Stata All in One 失败：'
+    }
+};
+
+const MIGRATION_STATE_KEYS = {
+    hide: 'stata-outline.hideMigration',
+    next: 'stata-outline.nextMigrationPrompt'
+};
+
+async function resetMigrationPrompt(context) {
+    await context.globalState.update(MIGRATION_STATE_KEYS.hide, false);
+    await context.globalState.update(MIGRATION_STATE_KEYS.next, 0);
+}
+
+function getUserLanguage() {
+    const lang = (vscode.env.language || '').toLowerCase();
+    return lang.startsWith('zh') ? 'zh' : 'en';
+}
+
+const UI_TEXT = {
+    en: {
+        lineTooLong: 'Line would be too long. Increase separator length setting.',
+        sepHere: 'Separator already present here.',
+        sepAboveBelow: 'Separator already present above and below.',
+        noEditor: 'No active editor found',
+        unsupportedPlatform: 'Running Stata code is only supported on macOS and Windows',
+        missingWinPath: 'Stata executable path not configured. Please set "stata-outline.stataPathWindows" in settings.',
+        noStataInstalled: ({ installedList }) => `No Stata installation detected. Please install Stata or set an existing version. Installed: ${installedList}.`,
+        winRunFailed: ({ message, detail }) => `Failed to run Stata code on Windows: ${message}${detail}`,
+        codeSentStata: 'Code sent to Stata',
+        runFailed: ({ message }) => `Failed to run Stata code: ${message}`,
+        codeSentApp: ({ app }) => `Code sent to ${app}`,
+        tmpFileFailed: ({ message }) => `Failed to create temporary file: ${message}`,
+        oneChar: 'Please enter exactly one character.',
+        controlChars: 'Control characters are not supported.',
+        resetDone: 'Migration prompt state reset. It will show again on next check.'
+    },
+    zh: {
+        lineTooLong: '行长度不足，请在设置中增大分隔线长度。',
+        sepHere: '此处已存在分隔线。',
+        sepAboveBelow: '上下都有分隔线，无需重复插入。',
+        noEditor: '未找到活动编辑器',
+        unsupportedPlatform: '仅在 macOS 和 Windows 上支持运行 Stata 代码',
+        missingWinPath: '未配置 Stata 可执行路径，请设置 "stata-outline.stataPathWindows"。',
+        noStataInstalled: ({ installedList }) => `未检测到已安装的 Stata，请安装或设置可用版本。已检测：${installedList}。`,
+        winRunFailed: ({ message, detail }) => `在 Windows 运行 Stata 失败：${message}${detail}`,
+        codeSentStata: '已发送代码到 Stata',
+        runFailed: ({ message }) => `运行 Stata 代码失败：${message}`,
+        codeSentApp: ({ app }) => `已发送代码到 ${app}`,
+        tmpFileFailed: ({ message }) => `创建临时文件失败：${message}`,
+        oneChar: '请输入恰好一个字符。',
+        controlChars: '不支持控制字符。',
+        resetDone: '迁移提示状态已重置，下次检查会再次弹窗。'
+    }
+};
+
+function msg(key, params) {
+    const lang = getUserLanguage();
+    const dict = UI_TEXT[lang] || UI_TEXT.en;
+    const entry = dict[key] !== undefined ? dict[key] : UI_TEXT.en[key];
+    if (typeof entry === 'function') {
+        return entry(params || {});
+    }
+    return entry;
+}
+
+function setNextMigrationPrompt(context, delayMs) {
+    const next = Date.now() + delayMs;
+    return context.globalState.update(MIGRATION_STATE_KEYS.next, next);
+}
+
+function scheduleMigrationRecheck(context, delayMs) {
+    if (delayMs <= 0) {
+        checkMigrationPrompt(context);
+        return;
+    }
+    // Best-effort in-session reminder without waiting for reload
+    setTimeout(() => {
+        checkMigrationPrompt(context);
+    }, delayMs + 200);
+}
+
+async function showMigrationPrompt(context) {
+    const hide = context.globalState.get(MIGRATION_STATE_KEYS.hide, false);
+    if (hide) {
+        return;
+    }
+
+    const lang = getUserLanguage();
+    const t = MIGRATION_MESSAGES[lang] || MIGRATION_MESSAGES.en;
+
+    const choice = await vscode.window.showInformationMessage(t.prompt, t.install, t.learnMore, t.remindLater);
+    if (!choice) {
+        return;
+    }
+
+    if (choice === t.install) {
+        try {
+            await vscode.commands.executeCommand('workbench.extensions.installExtension', 'ZihaoVistonWang.stata-all-in-one');
+            await context.globalState.update(MIGRATION_STATE_KEYS.hide, true);
+            showInfo(t.installSuccess);
+        } catch (err) {
+            showError(`${t.installFailed}${err && err.message ? err.message : err}`);
+        }
+        // Debug: re-prompt soon so you can verify flow
+        const delay = 24 * 60 * 60 * 1000;
+        await setNextMigrationPrompt(context, delay);
+        scheduleMigrationRecheck(context, delay);
+        return;
+    }
+
+    if (choice === t.learnMore) {
+        await vscode.commands.executeCommand('workbench.extensions.search', 'ZihaoVistonWang.stata-all-in-one');
+        // Debug: re-prompt soon so you can verify flow
+        const delay = 24 * 60 * 60 * 1000;
+        await setNextMigrationPrompt(context, delay);
+        scheduleMigrationRecheck(context, delay);
+        return;
+    }
+
+    if (choice === t.remindLater) {
+        await setNextMigrationPrompt(context, 7 * 24 * 60 * 60 * 1000);
+        return;
+    }
+
+}
+
+async function checkMigrationPrompt(context) {
+    const hide = context.globalState.get(MIGRATION_STATE_KEYS.hide, false);
+    if (hide) {
+        return;
+    }
+
+    const next = context.globalState.get(MIGRATION_STATE_KEYS.next, 0);
+    if (typeof next === 'number' && next > Date.now()) {
+        return;
+    }
+
+    await showMigrationPrompt(context);
+}
+
 // 通用分隔符移除函数：识别并去除标题两端的重复字符/模式
 // 支持格式：`pattern ... text ... pattern` 或 `pattern text pattern` (无空格)
 // 返回提取的标题，如果没有找到分隔符则返回原始标题
@@ -359,7 +515,7 @@ function insertSeparator(char) {
             
             if (remaining < 4) {
                 // 剩余空间不足，至少需要 ` sep ` + ` sep ` = 4个字符
-                showWarn('Line would be too long. Increase separator length setting.');
+                showWarn(msg('lineTooLong'));
                 return;
             }
             
@@ -395,7 +551,7 @@ function insertSeparator(char) {
 
     // 如果当前行本身是分割线，或上下都有分割线，则提醒并退出
     if (currentIsSep || (prevIsSep && nextIsSep)) {
-        showInfo('Separator already present here.');
+        showInfo(msg('sepHere'));
         return;
     }
 
@@ -403,7 +559,7 @@ function insertSeparator(char) {
         if (prevIsSep) {
             // 上一行已是分割线，则在当前行下方插入，但若下方也是分割线就提示
             if (nextIsSep) {
-                showInfo('Separator already present above and below.');
+                showInfo(msg('sepAboveBelow'));
                 return;
             }
             targetLine = targetLine + 1;
@@ -544,7 +700,7 @@ function stripSurroundingQuotes(p) {
 async function runCurrentSection() {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-        showError('No active editor found');
+        showError(msg('noEditor'));
         return;
     }
 
@@ -556,7 +712,7 @@ async function runCurrentSection() {
     const onMac = isMacOS();
 
     if (!onWindows && !onMac) {
-        showError('Running Stata code is only supported on macOS and Windows');
+        showError(msg('unsupportedPlatform'));
         return;
     }
 
@@ -566,7 +722,7 @@ async function runCurrentSection() {
         const rawPath = config.get('stataPathWindows', '');
         stataPathWindows = stripSurroundingQuotes(rawPath.trim());
         if (!stataPathWindows) {
-            showError('Stata executable path not configured. Please set "stata-outline.stataPathWindows" in settings.');
+            showError(msg('missingWinPath'));
             return;
         }
     }
@@ -583,7 +739,7 @@ async function runCurrentSection() {
             const installedList = (foundApp.installed && foundApp.installed.length > 0)
                 ? foundApp.installed.join(', ')
                 : 'none detected';
-            showError(`No Stata installation detected. Please install Stata or set an existing version. Installed: ${installedList}.`);
+            showError(msg('noStataInstalled', { installedList }));
             return;
         }
         appName = foundApp.name;
@@ -695,11 +851,11 @@ async function runCurrentSection() {
                 
                 if (error) {
                     const detail = stderr && stderr.trim() ? ` Details: ${stderr.trim()}` : '';
-                    showError(`Failed to run Stata code on Windows: ${error.message}${detail}`);
+                    showError(msg('winRunFailed', { message: error.message, detail }));
                     return;
                 }
                 
-                showInfo('Code sent to Stata');
+                showInfo(msg('codeSentStata'));
             });
         } else if (onMac) {
             // macOS 执行逻辑
@@ -723,19 +879,21 @@ async function runCurrentSection() {
                 }, 2000); // 延迟删除，确保Stata已完成读取
                 
                 if (error) {
-                    showError(`Failed to run Stata code: ${error.message}`);
+                    showError(msg('runFailed', { message: error.message }));
                     return;
                 }
                 
-                showInfo(`Code sent to ${appName}`);
+                showInfo(msg('codeSentApp', { app: appName }));
             });
         }
     } catch (error) {
-        showError(`Failed to create temporary file: ${error.message}`);
+        showError(msg('tmpFileFailed', { message: error.message }));
     }
 }
 
 function activate(context) {
+    checkMigrationPrompt(context);
+
     // 注册命令
     const commands = [
         { id: 'stata-outline.setLevel1', level: 1 },
@@ -774,11 +932,11 @@ function activate(context) {
         if (input) {
             const cps = Array.from(input);
             if (cps.length > 1) {
-                showWarn('Please enter exactly one character.');
+                showWarn(msg('oneChar'));
                 return;
             }
             if (/[\x00-\x1F\x7F]/.test(input)) {
-                showWarn('Control characters are not supported.');
+                showWarn(msg('controlChars'));
                 return;
             }
         }
@@ -791,6 +949,14 @@ function activate(context) {
     // 注册运行 section 的命令
     const runSectionCommand = vscode.commands.registerCommand('stata-outline.runSection', runCurrentSection);
     context.subscriptions.push(runSectionCommand);
+
+    // Debug helper: reset migration prompt state to show dialog again immediately
+    const resetPromptCommand = vscode.commands.registerCommand('stata-outline.debugResetMigrationPrompt', async () => {
+        await resetMigrationPrompt(context);
+        showInfo(msg('resetDone'));
+        checkMigrationPrompt(context);
+    });
+    context.subscriptions.push(resetPromptCommand);
 
     // 原有的 DocumentSymbolProvider
     const provider = {
