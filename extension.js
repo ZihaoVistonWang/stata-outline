@@ -24,7 +24,7 @@ const MIGRATION_MESSAGES = {
                 '你的 Stata Outline 触发了进化条件 😎！\n' +
                 '它现在已经变身成更强大的\n' +
                 '🚀 Stata All in One 🚀\n' +
-                '赶紧一键安装吧\n\n' +
+                '赶紧一键安装吧!\n\n' +
                 '来自：Zihao Viston Wang',
         install: '安装',
         learnMore: '了解更多',
