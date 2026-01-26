@@ -7,7 +7,12 @@ const showError = (msg, ...items) => vscode.window.showErrorMessage(`${EXT_LABEL
 
 const MIGRATION_MESSAGES = {
     en: {
-        prompt: 'Stata Outline is no longer maintained. Please install Stata All in One for future updates and support.',
+        prompt: 'Update Stata Outline\n\n' +
+                'Your Stata Outline has evolved! 😎\n' +
+                'It has now transformed into the more powerful\n' +
+                '🚀 Stata All in One 🚀\n' +
+                'Install it now to level up!\n\n' +
+                'From: Zihao Viston Wang',
         install: 'Install',
         learnMore: 'Learn more',
         remindLater: 'Remind me in 7 days',
@@ -15,7 +20,12 @@ const MIGRATION_MESSAGES = {
         installFailed: 'Failed to install Stata All in One: '
     },
     zh: {
-        prompt: 'Stata Outline 已不再维护，建议安装 Stata All in One 以获得后续更新。',
+        prompt: '更新 Stata Outline\n\n' +
+                '你的 Stata Outline 触发了进化条件 😎！\n' +
+                '它现在已经变身成更强大的\n' +
+                '🚀 Stata All in One 🚀\n' +
+                '赶紧一键安装吧\n\n' +
+                '来自：Zihao Viston Wang',
         install: '安装',
         learnMore: '了解更多',
         remindLater: '稍后提示',
@@ -111,7 +121,7 @@ async function showMigrationPrompt(context) {
     const lang = getUserLanguage();
     const t = MIGRATION_MESSAGES[lang] || MIGRATION_MESSAGES.en;
 
-    const choice = await vscode.window.showInformationMessage(t.prompt, t.install, t.learnMore, t.remindLater);
+    const choice = await vscode.window.showInformationMessage(t.prompt, { modal: true }, t.install, t.learnMore, t.remindLater);
     if (!choice) {
         return;
     }

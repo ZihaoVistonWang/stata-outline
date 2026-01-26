@@ -2,7 +2,7 @@
   "name": "stata-outline",
   "displayName": "Stata Outline",
   "description": "Adds hierarchical Outline support for Stata .do files using comment headings like '**#', '**##', etc. Suggested to migrate to `Stata All in One`; this extension is no longer maintained.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "publisher": "ZihaoVistonWang",
   "icon": "icon.png",
   "engines": {

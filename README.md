@@ -87,12 +87,10 @@ Search for "Stata Outline" in VS Code settings and configure:
 4. **Stata Version (macOS)** (`stata-outline.stataVersion`)
 
    - Select between `StataMP`, `StataIC`, `StataSE` when running on macOS.
-
 5. **Active Stata Window After Running Code (macOS)** (`stata-outline.activateStataWindow`)
 
    - `true` (default): Brings Stata window to the foreground after code execution.
    - `false`: Does not change focus.
-
 6. **Comment Style** (`stata-outline.commentStyle`)
 
    - `// ` (default): Line comments with double slash.
@@ -126,7 +124,7 @@ Search for "Stata Outline" in VS Code settings and configure:
 
 | Version     | Changes                                                                                                                              | Release Date |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------ |
-| 0.2.2       | Added migration prompt recommending Stata All in One                                                                                | 2026-01-27   |
+| 0.2.2-0.2.3 | Added migration prompt recommending Stata All in One                                                                                 | 2026-01-27   |
 | 0.2.0-0.2.1 | macOS native section/run support (no external dependency); play button also in Outline view; new divider line commands and shortcuts | 2026-01-25   |
 | 0.1.9       | Outline now follows cursor, highlighting corresponding sections in real-time                                                         | 2026-01-24   |
 | 0.1.7-0.1.8 | Added toggle comments functionality with customizable comment styles                                                                 | 2026-01-22   |
