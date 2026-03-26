@@ -8,7 +8,7 @@
 
 ---
 
-> ⚠️ 当前不再维护，建议安装 **Stata All in One** 获取后续更新。
+> ⚠️ 当前不再维护，建议安装 **[Stata All in One](https://gitee.com/ZihaoVistonWang/stata-all-in-one)** 获取后续更新。
 
 ## 功能概览
 
