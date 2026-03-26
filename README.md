@@ -8,7 +8,7 @@
 
 ---
 
-> ⚠️ Maintenance: This extension is no longer maintained. Please migrate to **Stata All in One** for ongoing updates.
+> ⚠️ Maintenance: This extension is no longer maintained. Please migrate to **[Stata All in One](https://github.com/ZihaoVistonWang/stata-all-in-one)** for ongoing updates.
 
 ## Features
 
